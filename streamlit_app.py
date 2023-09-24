@@ -1,15 +1,15 @@
 import streamlit as st
-from googletrans import Translator
+from translate import Translator
 
 def translate_to_english(text):
-    translator = Translator()
-    translation = translator.translate(text, dest='en')
-    return translation.text
+    translator = Translator(to_lang="en")
+    translation = translator.translate(text)
+    return translation
 
 def translate_to_spanish(text):
-    translator = Translator()
-    translation = translator.translate(text, dest='es')
-    return translation.text
+    translator = Translator(to_lang="es")
+    translation = translator.translate(text)
+    return translation
 
 def compare_texts(original_text, translated_text):
     if original_text == translated_text:
