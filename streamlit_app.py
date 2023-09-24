@@ -1,15 +1,34 @@
 import streamlit as st
-from translate import Translator
+import requests
+import json
 
 def translate_to_english(text):
-    translator = Translator(to_lang="en")
-    translation = translator.translate(text)
-    return translation
+    url = "https://ai-translate.pro/api/{secret_key}/es-en"
+    headers = {
+        "Content-Type": "application/json"
+    }
+    data = {
+        "text": text
+    }
+
+    response = requests.post(url, headers=headers, data=json.dumps(data))
+    result = response.json()
+
+    return result["result"]
 
 def translate_to_spanish(text):
-    translator = Translator(to_lang="es")
-    translation = translator.translate(text)
-    return translation
+    url = "https://ai-translate.pro/api/9428f69325adc980cc9b9dc6a0f84a30a3eb86e74787792c581cc44e4c1adfae/en-es"
+    headers = {
+        "Content-Type": "application/json"
+    }
+    data = {
+        "text": text
+    }
+
+    response = requests.post(url, headers=headers, data=json.dumps(data))
+    result = response.json()
+
+    return result["result"]
 
 def compare_texts(original_text, translated_text):
     if original_text == translated_text:
