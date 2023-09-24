@@ -3,8 +3,15 @@ import requests
 import json
 from docx import Document
 
+# Cambiar el título en la pestaña del navegador
+st.set_page_config(page_title="Traductor y Comparador de Texto", layout="centered")
+
+# Clave API personalizada
+secret_key = "9428f69325adc980cc9b9dc6a0f84a30a3eb86e74787792c581cc44e4c1adfae"
+
+# Función para traducir texto al inglés
 def translate_to_english(text):
-    url = "https://ai-translate.pro/api/9428f69325adc980cc9b9dc6a0f84a30a3eb86e74787792c581cc44e4c1adfae/es-en"
+    url = f"https://ai-translate.pro/api/{secret_key}/es-en"
     headers = {
         "Content-Type": "application/json"
     }
@@ -17,8 +24,9 @@ def translate_to_english(text):
 
     return result["result"]
 
+# Función para traducir texto al español
 def translate_to_spanish(text):
-    url = "https://ai-translate.pro/api/{secret_key}/en-es"
+    url = f"https://ai-translate.pro/api/{secret_key}/en-es"
     headers = {
         "Content-Type": "application/json"
     }
@@ -31,12 +39,14 @@ def translate_to_spanish(text):
 
     return result["result"]
 
+# Función para comparar textos
 def compare_texts(original_text, translated_text):
     if original_text == translated_text:
         return "Los textos son iguales."
     else:
         return "Los textos son diferentes."
 
+# Función para guardar la comparación en un documento Word
 def save_comparison(original_text, translated_text):
     doc = Document()
     doc.add_heading("Comparación de Textos", level=1)
@@ -74,7 +84,7 @@ def main():
                     save_comparison(original_text, translated_back_text)
                     st.write("Comparación guardada con éxito.")
 
-                    # Provide download link for the comparison file
+                    # Proporcionar enlace de descarga para el archivo de comparación
                     st.markdown("[Descargar comparación](comparison.docx)")
 
 if __name__ == "__main__":
