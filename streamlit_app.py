@@ -1,75 +1,76 @@
-import streamlit as st
+import requests
+import docx
 from docx import Document
-from googletrans import Translator
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
-def translate_text(text, target_lang):
-    translator = Translator()
-    translation = translator.translate(text, dest=target_lang)
-    return translation.text
+def translate_text(text, source_lang, target_lang):
+    url = "https://ai-translate.pro/api/9428f69325adc980cc9b9dc6a0f84a30a3eb86e74787792c581cc44e4c1adfae/{}/{}".format(source_lang, target_lang)
+    headers = {
+        "Content-Type": "application/json"
+    }
+    data = {
+        "text": text
+    }
+    response = requests.post(url, headers=headers, json=data)
+    translation = response.json()
+    return translation["text"]
 
 def compare_documents(original_doc, translated_doc):
-    changes = []
-    for i in range(len(original_doc.paragraphs)):
-        original_text = original_doc.paragraphs[i].text
-        translated_text = translated_doc.paragraphs[i].text
-        if original_text != translated_text:
-            changes.append((original_text, translated_text))
-    return changes
+    original_text = ""
+    translated_text = ""
 
-def save_changes(changes):
-    doc = Document()
-    for original_text, translated_text in changes:
-        p = doc.add_paragraph()
-        p.add_run("Original: ").bold = True
-        p.add_run(original_text)
-        p.add_run("\n")
-        p.add_run("Traducción: ").bold = True
-        p.add_run(translated_text)
-        p.add_run("\n")
-        p.add_run("-" * 50)
-        p.add_run("\n")
-    doc.save("control_de_cambios.docx")
+    # Leer el contenido del documento original
+    doc = Document(original_doc)
+    for paragraph in doc.paragraphs:
+        original_text += paragraph.text + "\n"
+
+    # Leer el contenido del documento traducido
+    doc = Document(translated_doc)
+    for paragraph in doc.paragraphs:
+        translated_text += paragraph.text + "\n"
+
+    # Comparar los dos textos
+    if original_text == translated_text:
+        print("Los documentos son idénticos.")
+    else:
+        print("Los documentos son diferentes.")
+
+        # Guardar el control de cambios en un nuevo documento
+        diff_doc = Document()
+        diff_doc.add_heading("Control de cambios", level=1)
+        diff_doc.add_paragraph("Documento original:", style="Heading2")
+        diff_doc.add_paragraph(original_text)
+        diff_doc.add_paragraph("Documento traducido:", style="Heading2")
+        diff_doc.add_paragraph(translated_text)
+
+        # Guardar el documento con el control de cambios
+        diff_doc.save("control_de_cambios.docx")
+        print("Se ha guardado el control de cambios en el archivo 'control_de_cambios.docx'.")
 
 def main():
-    st.title("Traductor y comparador de documentos")
-    st.write("Cargue un documento en español para traducirlo y compararlo con la traducción final:")
-    
-    file = st.file_uploader("Cargar documento .docx", type=["docx"])
-    
-    if file is not None:
-        original_doc = Document(file)
-        
-        st.write("Documento original:")
-        for paragraph in original_doc.paragraphs:
-            st.write(paragraph.text)
-        
-        translated_text = translate_text(original_doc.text, "en")
-        translated_doc = Document()
-        translated_doc.add_paragraph(translated_text)
-        
-        st.write("Documento traducido al inglés:")
-        for paragraph in translated_doc.paragraphs:
-            st.write(paragraph.text)
-        
-        retranslated_text = translate_text(translated_text, "es")
-        retranslated_doc = Document()
-        retranslated_doc.add_paragraph(retranslated_text)
-        
-        st.write("Documento traducido nuevamente al español:")
-        for paragraph in retranslated_doc.paragraphs:
-            st.write(paragraph.text)
-        
-        changes = compare_documents(original_doc, retranslated_doc)
-        
-        st.write("Cambios realizados:")
-        for original_text, translated_text in changes:
-            st.write("Original:", original_text)
-            st.write("Traducción:", translated_text)
-            st.write("-" * 50)
-        
-        save_changes(changes)
-        st.write("Control de cambios guardado como 'control_de_cambios.docx'")
+    # Cargar el documento original
+    original_doc = "documento_original.docx"
+
+    # Traducir el documento al inglés
+    translated_text = translate_text(original_doc, "es", "en")
+
+    # Guardar el texto traducido en un nuevo documento
+    translated_doc = "documento_traducido.docx"
+    doc = Document()
+    doc.add_paragraph(translated_text)
+    doc.save(translated_doc)
+
+    # Volver a traducir el documento al español
+    retranslated_text = translate_text(translated_text, "en", "es")
+
+    # Guardar el texto re-traducido en un nuevo documento
+    retranslated_doc = "documento_retraducido.docx"
+    doc = Document()
+    doc.add_paragraph(retranslated_text)
+    doc.save(retranslated_doc)
+
+    # Comparar los documentos original y re-traducido
+    compare_documents(original_doc, retranslated_doc)
 
 if __name__ == "__main__":
     main()
