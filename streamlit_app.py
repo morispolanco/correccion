@@ -53,4 +53,5 @@ if uploaded_file is not None:
     new_doc.add_paragraph(comparison)
     
     # Descargar el nuevo documento DOCX
-    st.download_button("Descargar documento con comparaciones", data=docx.save(new_doc), file_name="documento_comparado.docx")
+    new_doc.save("documento_comparado.docx")
+    st.download_button("Descargar documento con comparaciones", data=None, file_path="documento_comparado.docx")
