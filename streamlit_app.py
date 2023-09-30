@@ -1,53 +1,75 @@
 import streamlit as st
-from googletrans import Translator, LANGUAGES
 from docx import Document
-from diff_match_patch import diff_match_patch
+from googletrans import Translator
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
-st.title("Traducción y comparación de documentos")
-
-# Carga del archivo
-uploaded_file = st.file_uploader("Carga un documento Word", type="docx")
-if uploaded_file is not None:
-    doc = Document(uploaded_file)
-
-    # Traducción al inglés
+def translate_text(text, target_lang):
     translator = Translator()
-    translated_texts = []
-    for paragraph in doc.paragraphs:
-        translated_texts.append(translator.translate(paragraph.text, src='es', dest='en').text)
+    translation = translator.translate(text, dest=target_lang)
+    return translation.text
 
-    # Nuevo documento en inglés
-    doc_en = Document()
-    for text in translated_texts:
-        doc_en.add_paragraph(text)
+def compare_documents(original_doc, translated_doc):
+    changes = []
+    for i in range(len(original_doc.paragraphs)):
+        original_text = original_doc.paragraphs[i].text
+        translated_text = translated_doc.paragraphs[i].text
+        if original_text != translated_text:
+            changes.append((original_text, translated_text))
+    return changes
 
-    # Traducción del inglés al español
-    translated_texts_es = []
-    for paragraph in doc_en.paragraphs:
-        translated_texts_es.append(translator.translate(paragraph.text, src='en', dest='es').text)
+def save_changes(changes):
+    doc = Document()
+    for original_text, translated_text in changes:
+        p = doc.add_paragraph()
+        p.add_run("Original: ").bold = True
+        p.add_run(original_text)
+        p.add_run("\n")
+        p.add_run("Traducción: ").bold = True
+        p.add_run(translated_text)
+        p.add_run("\n")
+        p.add_run("-" * 50)
+        p.add_run("\n")
+    doc.save("control_de_cambios.docx")
 
-    # Nuevo documento en español
-    doc_es = Document()
-    for text in translated_texts_es:
-        doc_es.add_paragraph(text)
+def main():
+    st.title("Traductor y comparador de documentos")
+    st.write("Cargue un documento en español para traducirlo y compararlo con la traducción final:")
+    
+    file = st.file_uploader("Cargar documento .docx", type=["docx"])
+    
+    if file is not None:
+        original_doc = Document(file)
+        
+        st.write("Documento original:")
+        for paragraph in original_doc.paragraphs:
+            st.write(paragraph.text)
+        
+        translated_text = translate_text(original_doc.text, "en")
+        translated_doc = Document()
+        translated_doc.add_paragraph(translated_text)
+        
+        st.write("Documento traducido al inglés:")
+        for paragraph in translated_doc.paragraphs:
+            st.write(paragraph.text)
+        
+        retranslated_text = translate_text(translated_text, "es")
+        retranslated_doc = Document()
+        retranslated_doc.add_paragraph(retranslated_text)
+        
+        st.write("Documento traducido nuevamente al español:")
+        for paragraph in retranslated_doc.paragraphs:
+            st.write(paragraph.text)
+        
+        changes = compare_documents(original_doc, retranslated_doc)
+        
+        st.write("Cambios realizados:")
+        for original_text, translated_text in changes:
+            st.write("Original:", original_text)
+            st.write("Traducción:", translated_text)
+            st.write("-" * 50)
+        
+        save_changes(changes)
+        st.write("Control de cambios guardado como 'control_de_cambios.docx'")
 
-    # Comparación
-    diff = diff_match_patch()
-    diff_result = diff.diff_main(doc.text, doc_es.text)
-    diff.diff_cleanupSemantic(diff_result)
-    diff_text = diff.diff_prettyHtml(diff_result)
-
-    # Visualización de la comparación
-    st.write(diff_text, unsafe_allow_html=True)
-
-    # Descarga del documento comparado
-    def filedownload(doc, name):
-        doc.save(name)
-        st.download_button(
-            label="Descargar documento comparado",
-            data=doc,
-            file_name=name,
-            mime="application/octet-stream"
-        )
-
-    filedownload(doc_es, "documento_comparado.docx")
+if __name__ == "__main__":
+    main()
