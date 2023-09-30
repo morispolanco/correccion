@@ -20,14 +20,14 @@ def compare_documents(original_doc, translated_doc):
     translated_text = ""
 
     # Leer el contenido del documento original
-    doc = Document(original_doc)
-    for paragraph in doc.paragraphs:
-        original_text += paragraph.text + "\n"
+    with Document(original_doc) as doc:
+        for paragraph in doc.paragraphs:
+            original_text += paragraph.text + "\n"
 
     # Leer el contenido del documento traducido
-    doc = Document(translated_doc)
-    for paragraph in doc.paragraphs:
-        translated_text += paragraph.text + "\n"
+    with Document(translated_doc) as doc:
+        for paragraph in doc.paragraphs:
+            translated_text += paragraph.text + "\n"
 
     # Comparar los dos textos
     if original_text == translated_text:
