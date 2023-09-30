@@ -1,4 +1,1 @@
 streamlit
-python-docx
-requests
-docx2txt
