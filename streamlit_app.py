@@ -12,8 +12,13 @@ def translate_text(text, source_lang, target_lang):
         "text": text
     }
     response = requests.post(url, headers=headers, json=data)
-    translation = response.json()
-    return translation["text"]
+
+    if response.ok and response.status_code == 200:
+        translation = response.json()
+        return translation["text"]
+    else:
+        print("Error en la solicitud de traducción.")
+        return None
 
 def compare_documents(original_doc, translated_doc):
     original_text = ""
@@ -54,23 +59,25 @@ def main():
     # Traducir el documento al inglés
     translated_text = translate_text(original_doc, "es", "en")
 
-    # Guardar el texto traducido en un nuevo documento
-    translated_doc = "documento_traducido.docx"
-    doc = Document()
-    doc.add_paragraph(translated_text)
-    doc.save(translated_doc)
+    if translated_text is not None:
+        # Guardar el texto traducido en un nuevo documento
+        translated_doc = "documento_traducido.docx"
+        doc = Document()
+        doc.add_paragraph(translated_text)
+        doc.save(translated_doc)
 
-    # Volver a traducir el documento al español
-    retranslated_text = translate_text(translated_text, "en", "es")
+        # Volver a traducir el documento al español
+        retranslated_text = translate_text(translated_text, "en", "es")
 
-    # Guardar el texto re-traducido en un nuevo documento
-    retranslated_doc = "documento_retraducido.docx"
-    doc = Document()
-    doc.add_paragraph(retranslated_text)
-    doc.save(retranslated_doc)
+        if retranslated_text is not None:
+            # Guardar el texto re-traducido en un nuevo documento
+            retranslated_doc = "documento_retraducido.docx"
+            doc = Document()
+            doc.add_paragraph(retranslated_text)
+            doc.save(retranslated_doc)
 
-    # Comparar los documentos original y re-traducido
-    compare_documents(original_doc, retranslated_doc)
+            # Comparar los documentos original y re-traducido
+            compare_documents(original_doc, retranslated_doc)
 
 if __name__ == "__main__":
     main()
