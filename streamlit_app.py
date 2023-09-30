@@ -2,6 +2,7 @@ import streamlit as st
 import docx2txt
 import docx
 import requests
+import json
 
 # Función para traducir el texto utilizando la API de AI Translate
 def translate_text(text, source_lang, target_lang):
@@ -13,8 +14,15 @@ def translate_text(text, source_lang, target_lang):
         "text": text
     }
     response = requests.post(url, headers=headers, json=data)
-    translation = response.json()
-    return translation["text"]
+    
+    if response.ok and response.status_code == 200:
+        try:
+            translation = response.json()
+            return translation["text"]
+        except json.decoder.JSONDecodeError:
+            st.error("Error al decodificar la respuesta de la API")
+    else:
+        st.error("Error en la respuesta de la API")
 
 # Configuración de la aplicación de Streamlit
 st.title("Traductor y comparador de documentos")
